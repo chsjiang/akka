@@ -617,6 +617,8 @@ abstract class StressSpec
 
   override def beforeEach(): Unit = { step += 1 }
 
+  override def expectedTestDuration = 10.minutes
+
   override def muteLog(sys: ActorSystem = system): Unit = {
     super.muteLog(sys)
     sys.eventStream.publish(Mute(EventFilter[RuntimeException](pattern = ".*Simulated exception.*")))
