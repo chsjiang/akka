@@ -224,6 +224,7 @@ object SupervisorHierarchySpec {
         case (child, kidSize) ⇒
           val name = child.path.name
           if (context.actorFor(name).isTerminated) {
+            log :+= Event(s"PR child Died ${child}", identityHashCode(this))
             listener ! Died(child)
             val props = Props(new Hierarchy(kidSize, breadth, listener, myLevel + 1)).withDispatcher("hierarchy")
             context.watch(context.actorOf(props, name))
@@ -240,6 +241,7 @@ object SupervisorHierarchySpec {
     }
 
     override def postStop {
+      log :+= Event("stopped", identityHashCode(this))
       if (failed || suspended) {
         listener ! ErrorLog("not resumed (" + failed + ", " + suspended + ")", log)
       } else {
@@ -282,12 +284,13 @@ object SupervisorHierarchySpec {
            */
           val name = ref.path.name
           if (pongsToGo == 0 && context.actorFor(name).isTerminated) {
+            log :+= Event(s"TD child Died ${ref}", identityHashCode(this))
             listener ! Died(ref)
             val kids = stateCache.get(self).kids(ref)
             val props = Props(new Hierarchy(kids, breadth, listener, myLevel + 1)).withDispatcher("hierarchy")
             context.watch(context.actorOf(props, name))
           } else {
-            log :+= Event(sender + " terminated while pongOfDeath", identityHashCode(this))
+            log :+= Event(s"${ref} terminated while pongOfDeath ptg=${pongsToGo}", identityHashCode(this))
           }
         case Abort ⇒ abort("terminating")
         case PingOfDeath ⇒
