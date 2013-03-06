@@ -169,7 +169,8 @@ private[cluster] case class Gossip(
 
   def isLeader(address: Address): Boolean = leader == Some(address)
 
-  def leader: Option[Address] = members.find(_.status != Exiting).orElse(members.headOption).map(_.address)
+  def leader: Option[Address] = members.find(m ⇒ m.status != Joining && m.status != Exiting && m.status != Down).
+    orElse(members.toIndexedSeq.sorted(Member.leaderStatusOrdering).headOption).map(_.address)
 
   def isSingletonCluster: Boolean = members.size == 1
 

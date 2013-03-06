@@ -130,4 +130,21 @@ class MemberOrderingSpec extends WordSpec with MustMatchers {
       seq(3) must equal(AddressFromURIString("akka://sys@darkstar2:1111"))
     }
   }
+
+  "Leader status ordering" must {
+
+    "order members with status Joining, Exiting and Down last" in {
+      val m1 = Member(Address("akka.tcp", "sys1", "host1", 5000), MemberStatus.Joining)
+      val m2 = Member(Address("akka.tcp", "sys1", "host1", 7000), MemberStatus.Joining)
+      val m3 = Member(Address("akka.tcp", "sys1", "host1", 3000), MemberStatus.Exiting)
+      val m4 = Member(Address("akka.tcp", "sys1", "host1", 6000), MemberStatus.Exiting)
+      val m5 = Member(Address("akka.tcp", "sys1", "host1", 2000), MemberStatus.Down)
+      val m6 = Member(Address("akka.tcp", "sys1", "host1", 4000), MemberStatus.Down)
+      val m7 = Member(Address("akka.tcp", "sys1", "host1", 8000), MemberStatus.Up)
+      val m8 = Member(Address("akka.tcp", "sys1", "host1", 9000), MemberStatus.Up)
+      val expected = IndexedSeq(m7, m8, m1, m2, m3, m4, m5, m6)
+      val shuffled = Random.shuffle(expected)
+      shuffled.sorted(Member.leaderStatusOrdering) must be(expected)
+    }
+  }
 }
